@@ -72,12 +72,17 @@ if (VULKAN_SDK)
 endif()
 
 find_package(Vulkan REQUIRED)
-find_package(vsg REQUIRED)
+if (NOT TARGET vsg::vsg)
+    find_package(vsg REQUIRED)
+endif()
 
 # find the optional vsgXchange that can be used for reading and range of image and 3d model formats and shader compilation
-find_package(vsgXchange QUIET)
+if (NOT TARGET vsgXchange::vsgXchange)
+    find_package(vsgXchange QUIET)
+endif()
 
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/src/imgui/imgui.h)
+message(AUTHOR_WARNING "TODO: Writing to CMAKE_CURRENT_SOURCE_DIR is not a good idea, FetchContent is a better option.")
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui.h)
     find_package(Git QUIET)
 
     execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
@@ -89,74 +94,74 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/src/imgui/imgui.h)
     endif()
 endif()
 
-
-execute_process(COMMAND ${CMAKE_COMMAND} -E compare_files ${CMAKE_SOURCE_DIR}/include/vsgImGui/imgui.h ${CMAKE_SOURCE_DIR}/src/imgui/imgui.h RESULT_VARIABLE compare_result)
+execute_process(COMMAND ${CMAKE_COMMAND} -E compare_files ${CMAKE_CURRENT_SOURCE_DIR}/include/vsgImGui/imgui.h ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui/imgui.h RESULT_VARIABLE compare_result)
 if (compare_result EQUAL 0)
 else()
-    file(COPY ${CMAKE_SOURCE_DIR}/src/imgui/imgui.h DESTINATION ${CMAKE_SOURCE_DIR}/include/vsgImGui/)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui/imgui.h DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/include/vsgImGui/)
     message("copied imgui.h")
 endif()
 
-
-add_custom_target(clobber
-    COMMAND git clean -d -f -x
-)
-
-# automatically buil_all_h build target to generate the include/vsg/all.h from the headers in the include/vsg/* directories
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/build/uninstall.cmake
-)
-
-# add clang-foramt build target to enforce a standard code style guide.
-find_program(CLANGFORMAT clang-format)
-if (CLANGFORMAT)
-    add_custom_target(clang-format
-        COMMAND ${CLANGFORMAT} -i ${PATH_TO_SOURCE}include/vsgImGui/GuiCommand.h ${PATH_TO_SOURCE}include/vsgImGui/GuiEventHandler.h  ${PATH_TO_SOURCE}include/vsgImGui/Export.h ${PATH_TO_SOURCE}src/vsgImGui/*.cpp
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Automated code format using clang-format"
-    )
-endif()
-
-option(MAINTAINER "Enable maintainer build methods, such as making git branches and tags." OFF)
-if (MAINTAINER)
-
-    #
-    # Provide target for tagging a release
-    #
-    SET(BASE_NAME vsgImGui)
-    SET(VSGIMGUI_BRANCH ${BASE_NAME}-${VSGIMGUI_VERSION_MAJOR}.${VSGIMGUI_VERSION_MINOR})
-
-    SET(GITCOMMAND git)
-
-    IF   (VSGIMGUI_RELEASE_CANDIDATE EQUAL 0)
-        SET(RELEASE_NAME ${BASE_NAME}-${VSGIMGUI_VERSION})
-    ELSE()
-        SET(RELEASE_NAME ${BASE_NAME}-${VSGIMGUI_VERSION}-rc${VSGIMGUI_RELEASE_CANDIDATE})
-    ENDIF()
-
-    SET(RELEASE_MESSAGE "Release ${RELEASE_NAME}")
-    SET(BRANCH_MESSAGE "Branch ${VSGIMGUI_BRANCH}")
-
-    add_custom_target(tag-test
-        COMMAND echo ${GITCOMMAND} tag -a ${RELEASE_NAME} -m ${RELEASE_MESSAGE}
-        COMMAND echo ${GITCOMMAND} push origin ${RELEASE_NAME}
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    add_custom_target(clobber
+        COMMAND git clean -d -f -x
     )
 
-    add_custom_target(tag-run
-        COMMAND ${GITCOMMAND} tag -a ${RELEASE_NAME} -m ${RELEASE_MESSAGE}
-        COMMAND ${GITCOMMAND} push origin ${RELEASE_NAME}
+    # automatically buil_all_h build target to generate the include/vsg/all.h from the headers in the include/vsg/* directories
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/build/uninstall.cmake
     )
 
-    add_custom_target(branch-test
-        COMMAND echo ${GITCOMMAND} branch ${VSGIMGUI_BRANCH}
-        COMMAND echo ${GITCOMMAND} push origin ${VSGIMGUI_BRANCH}
-    )
+    # add clang-foramt build target to enforce a standard code style guide.
+    find_program(CLANGFORMAT clang-format)
+    if (CLANGFORMAT)
+        add_custom_target(clang-format
+            COMMAND ${CLANGFORMAT} -i ${PATH_TO_SOURCE}include/vsgImGui/GuiCommand.h ${PATH_TO_SOURCE}include/vsgImGui/GuiEventHandler.h  ${PATH_TO_SOURCE}include/vsgImGui/Export.h ${PATH_TO_SOURCE}src/vsgImGui/*.cpp
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Automated code format using clang-format"
+        )
+    endif()
 
-    add_custom_target(branch-run
-        COMMAND ${GITCOMMAND} branch ${VSGIMGUI_BRANCH}
-        COMMAND ${GITCOMMAND} push origin ${VSGIMGUI_BRANCH}
-    )
+    option(MAINTAINER "Enable maintainer build methods, such as making git branches and tags." OFF)
+    if (MAINTAINER)
 
+        #
+        # Provide target for tagging a release
+        #
+        SET(BASE_NAME vsgImGui)
+        SET(VSGIMGUI_BRANCH ${BASE_NAME}-${VSGIMGUI_VERSION_MAJOR}.${VSGIMGUI_VERSION_MINOR})
+
+        SET(GITCOMMAND git)
+
+        IF   (VSGIMGUI_RELEASE_CANDIDATE EQUAL 0)
+            SET(RELEASE_NAME ${BASE_NAME}-${VSGIMGUI_VERSION})
+        ELSE()
+            SET(RELEASE_NAME ${BASE_NAME}-${VSGIMGUI_VERSION}-rc${VSGIMGUI_RELEASE_CANDIDATE})
+        ENDIF()
+
+        SET(RELEASE_MESSAGE "Release ${RELEASE_NAME}")
+        SET(BRANCH_MESSAGE "Branch ${VSGIMGUI_BRANCH}")
+
+        add_custom_target(tag-test
+            COMMAND echo ${GITCOMMAND} tag -a ${RELEASE_NAME} -m ${RELEASE_MESSAGE}
+            COMMAND echo ${GITCOMMAND} push origin ${RELEASE_NAME}
+        )
+
+        add_custom_target(tag-run
+            COMMAND ${GITCOMMAND} tag -a ${RELEASE_NAME} -m ${RELEASE_MESSAGE}
+            COMMAND ${GITCOMMAND} push origin ${RELEASE_NAME}
+        )
+
+        add_custom_target(branch-test
+            COMMAND echo ${GITCOMMAND} branch ${VSGIMGUI_BRANCH}
+            COMMAND echo ${GITCOMMAND} push origin ${VSGIMGUI_BRANCH}
+        )
+
+        add_custom_target(branch-run
+            COMMAND ${GITCOMMAND} branch ${VSGIMGUI_BRANCH}
+            COMMAND ${GITCOMMAND} push origin ${VSGIMGUI_BRANCH}
+        )
+
+    endif()
 endif()
 
 # source directory for main vsgXchange library

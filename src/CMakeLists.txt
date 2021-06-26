@@ -3,7 +3,7 @@
 set(EXTRA_DEFINES)
 set(EXTRA_INCLUDES)
 
-SET(HEADER_PATH ${CMAKE_SOURCE_DIR}/include/vsgImGui)
+SET(HEADER_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../include/vsgImGui)
 
 set(HEADERS
     ${HEADER_PATH}/imgui.h
@@ -40,8 +40,8 @@ set_property(TARGET vsgImGui PROPERTY CXX_STANDARD 17)
 target_compile_definitions(vsgImGui PRIVATE ${EXTRA_DEFINES})
 
 target_include_directories(vsgImGui PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/vsgImGui>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include/vsgImGui>
     $<INSTALL_INTERFACE:include>
     ${EXTRA_INCLUDES}
 )
@@ -52,6 +52,8 @@ target_link_libraries(vsgImGui
     PRIVATE
         ${EXTRA_LIBRARIES}
 )
+
+add_library(vsgImGui::vsgImGui ALIAS vsgImGui)
 
 install(TARGETS vsgImGui EXPORT vsgImGuiTargets
         LIBRARY DESTINATION lib
@@ -80,9 +82,9 @@ write_basic_package_version_file("${CMAKE_BINARY_DIR}/src/vsgImGuiConfigVersion.
     COMPATIBILITY SameMajorVersion
 )
 
-configure_file("${CMAKE_SOURCE_DIR}/src/vsgImGuiConfig.cmake.in" "${CMAKE_BINARY_DIR}/src/vsgImGuiConfig.cmake" @ONLY)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/vsgImGuiConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/vsgImGuiConfig.cmake" @ONLY)
 
-install(FILES "${CMAKE_BINARY_DIR}/src/vsgImGuiConfig.cmake" "${CMAKE_BINARY_DIR}/src/vsgImGuiConfigVersion.cmake"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/vsgImGuiConfig.cmake" "${CMAKE_CURRENT_BINARY_DIR}/vsgImGuiConfigVersion.cmake"
     DESTINATION lib/cmake/vsgImGui
 )
 
